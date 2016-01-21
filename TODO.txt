@@ -1,0 +1,16 @@
+TO DO:
+
+Backend:
+ * Clean up code, refactor etc.
+ * More validation
+ * Variable expiration times
+    - Set a general lifecycle policy directly in S3?
+ * Replace or wrap password hashing (currently just sha256). Bcrypt handles a
+   maximum of 72 characters.
+ * Multi-part uploads
+    - Will make it easier to upload large files. Combine with some fancy
+      javascript for showing progress bars etc. in the web interface
+
+CLI:
+ * Download: Append counter to filename if file already exists
+ * Expiry dates do not appear to work for files uploaded from the CLI
