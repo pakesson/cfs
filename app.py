@@ -27,6 +27,8 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 S3_BUCKET = os.environ.get('S3_BUCKET')
 
+TITLE = "CCFCSC - Cloud Crypto File Cloud Storage for the Cloud(tm)"
+
 class UploadForm(Form):
     # TODO: Add a separate hidden field with an upload token?
     password = PasswordField('Password', validators=[DataRequired()])
@@ -66,7 +68,7 @@ def index():
 
         flash('{src} uploaded to S3 as {dst}'.format(src=filename, dst=key))
         flash('Download URL: {baseurl}download/{key}'.format(baseurl=request.url_root, key=key))
-    return render_template('index.html', form=form, title="CCFCSC - Cloud Crypto File Cloud Storage for the Cloud(tm)")
+    return render_template('index.html', form=form, title=TITLE)
 
 @app.route('/download/<key>', methods=("GET", "POST"))
 def download(key):
@@ -108,7 +110,7 @@ def download(key):
                 flash("Incorrect password")
     else:
         flash("Got no metadata")
-    return render_template('download.html', form=form, title="CCFCSC - Cloud Crypto File Cloud Storage for the Cloud(tm)")
+    return render_template('download.html', form=form, title=TITLE)
 
 """ Return a signed S3 request so that an external client can upload a file
     directly to S3
