@@ -62,13 +62,8 @@ func create_nonce() (*[NONCE_SIZE]byte, error) {
     return nonce, nil
 }
 
-func upload(file string) {
+func upload(file string, password string) {
     filename := filepath.Base(file)
-
-    password, err := speakeasy.Ask("Password: ")
-    if err != nil {
-        oopsie(err.Error())
-    }
 
     cipher_key := sha256.Sum256([]byte(password))
 
@@ -144,9 +139,64 @@ func upload(file string) {
     }
 }
 
-func download(key string) {
+func download(key string, password string) {
     fmt.Println("Downloading file")
-    //ioutil.WriteFile(filename, []byte(data))
+
+    cipher_key := sha256.Sum256([]byte(password))
+
+    uri, err := url.ParseRequestURI(BASE_URL)
+    uri.Path = "/api/download"
+    query_parameters := url.Values{}
+    query_parameters.Set("key", key)
+    uri.RawQuery = query_parameters.Encode()
+    url_str := fmt.Sprintf("%v", uri)
+
+    res, err := http.Get(url_str)
+    if err != nil {
+        oopsie(err.Error())
+    }
+    defer res.Body.Close()
+
+    decoder := json.NewDecoder(res.Body)
+    var jsondata Download_info
+    err = decoder.Decode(&jsondata)
+    if err != nil {
+        oopsie(err.Error())
+    }
+
+    url := jsondata.Url
+    res, err = http.Get(url)
+    if err != nil {
+        oopsie(err.Error())
+    }
+    defer res.Body.Close()
+
+    encoded_metadata := res.Header.Get("x-amz-meta-filename")
+    metadata, err := base64.StdEncoding.DecodeString(encoded_metadata)
+    if err != nil {
+        oopsie(err.Error())
+    }
+
+    var nonce [NONCE_SIZE]byte
+    copy(nonce[:], metadata)
+    filename_bytes, ok := secretbox.Open(nil, metadata[NONCE_SIZE:], &nonce, &cipher_key)
+    if !ok { // Thanks for returning a bool instead of an error object :( Super intuitive!
+        oopsie(err.Error())
+    }
+    filename := string(filename_bytes)
+
+    file, err := os.Create(filename)
+    if err != nil {
+        oopsie(err.Error())
+    }
+    defer file.Close()
+
+    _, err = io.Copy(file, res.Body)
+    if err != nil {
+        oopsie(err.Error())
+    }
+
+    fmt.Printf("File saved as '%v'\n", filename)
 }
 
 func main() {
@@ -160,11 +210,16 @@ func main() {
     verb := os.Args[1]
     object := os.Args[2]
 
+    password, err := speakeasy.Ask("Password: ")
+    if err != nil {
+        oopsie(err.Error())
+    }
+
     switch verb {
         case "upload":
-            upload(object)
+            upload(object, password)
         case "download":
-            download(object)
+            download(object, password)
         default:
             usage(prog)
             os.Exit(1)
