@@ -7,7 +7,6 @@ import (
     "time"
 
     "net/http"
-    "net/url"
     "encoding/json"
 
     "crypto/rand"
@@ -20,6 +19,10 @@ import (
 const (
     UUID_SIZE = 16
 )
+
+type DownloadResponse struct {
+    Url     string
+}
 
 type UploadResponse struct {
     Key     string
@@ -41,9 +44,37 @@ func uuid4() string {
 }
 
 func api_download(w http.ResponseWriter, r *http.Request) {
+    bucket := os.Getenv("S3_BUCKET")
+    region := os.Getenv("AWS_REGION")
+
     key := r.URL.Query().Get("key")
-    key, _ = url.QueryUnescape(key)
     log.Printf("Download request for '%v'", key)
+
+    svc := s3.New(session.New(&aws.Config{Region: aws.String(region)}))
+    resp, err := svc.HeadObject(&s3.HeadObjectInput{
+        Bucket: aws.String(bucket),
+        Key:    aws.String(key),
+    })
+
+    log.Println(resp)
+
+    if err != nil {
+        log.Println("Failed to get object", err)
+    }
+
+    req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+        Bucket: aws.String(bucket),
+        Key:    aws.String(key),
+    })
+    url, err := req.Presign(15 * time.Minute)
+
+    if err != nil {
+        log.Println("Failed to sign request", err)
+    }
+
+    w.Header().Set("Content-Type", "application/json")
+    response := DownloadResponse{Url: url}
+    json.NewEncoder(w).Encode(response)
 }
 
 func api_upload(w http.ResponseWriter, r *http.Request) {
