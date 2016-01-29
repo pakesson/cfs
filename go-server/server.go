@@ -55,9 +55,6 @@ func api_download(w http.ResponseWriter, r *http.Request) {
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
-
-	log.Println(resp)
-
 	if err != nil {
 		log.Println("Failed to get object", err)
 	}
