@@ -35,7 +35,6 @@ def upload(filename, password):
     headers = {
         'x-amz-acl': 'private',
         'x-amz-meta-filename': base64.b64encode(encrypted_filename),
-        #'expires': int(time.time()+60*60),
     }
 
     r = requests.put(url=url, data=encrypted_data, headers=headers)
@@ -66,9 +65,10 @@ def download(key, password):
 
             with open(filename, 'wb') as f:
                 f.write(data)
+
+            print("File saved as '{file}'".format(file=filename))
     else:
         print("Download failed.")
-        print("File saved as '{file}'".format(file=filename))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
