@@ -21,12 +21,12 @@ const (
 )
 
 type DownloadResponse struct {
-	Url string
+	Url string `json:"url"`
 }
 
 type UploadResponse struct {
-	Key string
-	Url string
+	Key string `json:"key"`
+	Url string `json:"url"`
 }
 
 func oopsie(msg string) {
