@@ -51,12 +51,14 @@ func api_download(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Download request for '%v'", key)
 
 	svc := s3.New(session.New(&aws.Config{Region: aws.String(region)}))
-	resp, err := svc.HeadObject(&s3.HeadObjectInput{
+	_, err := svc.HeadObject(&s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		log.Println("Failed to get object", err)
+		log.Println("Failed to get object: ", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
