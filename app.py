@@ -131,7 +131,6 @@ def api_upload():
                                           'Bucket': S3_BUCKET,
                                           'Key': key,
                                           'ACL': 'private',
-                                          #'Expires': (datetime.utcnow() + timedelta(hours=1)),
                                           'Metadata': {
                                             'filename': request.args.get('filename'),
                                           }
